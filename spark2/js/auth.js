@@ -102,7 +102,10 @@ async function handleAuth() {
   const btn = document.getElementById('authBtn');
   const msg = document.getElementById('authMsg');
 
-  if (!email || !password) { msg.textContent = 'Please fill in all fields.'; return; }
+  if (!email || !password) {
+    msg.textContent = 'Please fill in all fields.';
+    return;
+  }
 
   btn.disabled = true;
   btn.textContent = 'Loading...';
@@ -110,14 +113,43 @@ async function handleAuth() {
 
   if (currentTab === 'signup') {
     const username = document.getElementById('authUsername').value.trim();
-    if (!username) { msg.textContent = 'Please choose a username.'; btn.disabled = false; btn.textContent = 'Create account →'; return; }
 
-    // Check username taken
-    const { data: existing } = await sb.from('profiles').select('id').eq('username', username).single();
-    if (existing) { msg.textContent = 'Username already taken — try another.'; btn.disabled = false; btn.textContent = 'Create account →'; return; }
+    if (!username) {
+      msg.textContent = 'Please choose a username.';
+      btn.disabled = false;
+      btn.textContent = 'Create account →';
+      return;
+    }
 
-    const { data, error } = await sb.auth.signUp({ email, password });
-    if (error) { msg.textContent = error.message; btn.disabled = false; btn.textContent = 'Create account →'; return; }
+    // Check if username is taken
+    const { data: existing } = await sb
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .single();
+
+    if (existing) {
+      msg.textContent = 'Username already taken — try another.';
+      btn.disabled = false;
+      btn.textContent = 'Create account →';
+      return;
+    }
+
+    // SIGN UP (ONLY ONCE)
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username }
+      }
+    });
+
+    if (error) {
+      msg.textContent = error.message;
+      btn.disabled = false;
+      btn.textContent = 'Create account →';
+      return;
+    }
 
     if (data.user) {
       const { error: profileError } = await sb.from('profiles').insert({
@@ -128,21 +160,31 @@ async function handleAuth() {
         total_posts: 0,
         total_likes: 0,
       });
-      if (profileError) console.log('profile error:', JSON.stringify(profileError));
+
+      if (profileError) {
+        console.log('profile error:', profileError);
+      }
     }
 
     if (!data.session) {
       msg.className = 'modal-msg success';
       msg.textContent = 'Check your email to confirm your account!';
-      btn.disabled = false;
-      btn.textContent = 'Create account →';
     }
+
+    btn.disabled = false;
+    btn.textContent = 'Create account →';
+
   } else {
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    const { error } = await sb.auth.signInWithPassword({
+      email,
+      password
+    });
+
     if (error) {
       msg.textContent = 'No account found with that email — try signing up!';
       btn.disabled = false;
       btn.textContent = 'Sign in →';
+      return;
     }
   }
 }
