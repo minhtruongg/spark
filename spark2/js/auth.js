@@ -13,11 +13,15 @@ sb.auth.onAuthStateChange(async (event, session) => {
 
 async function loadCurrentProfile() {
   if (!currentUser) return;
-  const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
   if (!data) {
-    // Profile doesn't exist, sign them out and show message
     await sb.auth.signOut();
     showToast('No profile found — please sign up first', true);
+    // Reset modal to signup tab and re-enable button
+    switchTab('signup');
+    document.getElementById('authBtn').disabled = false;
+    document.getElementById('authBtn').textContent = 'Create account →';
+    openModal();
     return;
   }
   currentProfile = data;
