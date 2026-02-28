@@ -180,3 +180,8 @@ header { padding: 1.2rem 2rem; display: flex; align-items: center; justify-conte
 .prompt-text {
   font-size: clamp(1.2rem, 3.2vw, 2.4rem);
 }
+
+.prompt-hero {
+  max-width: none;
+  padding: 5rem 2rem 3rem;
+}
