@@ -2,7 +2,17 @@
 sb.auth.onAuthStateChange(async (event, session) => {
   currentUser = session?.user || null;
   if (currentUser) {
-    await loadCurrentProfile();
+    // Try to load profile, create it if it doesn't exist
+    const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+    if (!data) {
+      // First time — need username, open signup modal
+      await sb.auth.signOut();
+      showToast('Please sign up to create your profile', true);
+      switchTab('signup');
+      openModal();
+      return;
+    }
+    currentProfile = data;
     closeModal();
   } else {
     currentProfile = null;
@@ -118,6 +128,7 @@ async function handleAuth() {
         total_posts: 0,
         total_likes: 0,
       });
+      if (profileError) console.log('profile error:', JSON.stringify(profileError));
     }
 
     if (!data.session) {
