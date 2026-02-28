@@ -120,7 +120,7 @@ async function handleAuth() {
     if (error) { msg.textContent = error.message; btn.disabled = false; btn.textContent = 'Create account →'; return; }
 
     if (data.user) {
-      await sb.from('profiles').insert({
+      const { error: profileError } = await sb.from('profiles').insert({
         id: data.user.id,
         username,
         streak: 0,
