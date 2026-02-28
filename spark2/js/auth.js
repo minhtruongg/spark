@@ -13,7 +13,13 @@ sb.auth.onAuthStateChange(async (event, session) => {
 
 async function loadCurrentProfile() {
   if (!currentUser) return;
-  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (!data) {
+    // Profile doesn't exist, sign them out and show message
+    await sb.auth.signOut();
+    showToast('No profile found — please sign up first', true);
+    return;
+  }
   currentProfile = data;
 }
 
@@ -117,7 +123,11 @@ async function handleAuth() {
       btn.textContent = 'Create account →';
     }
   } else {
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) { msg.textContent = error.message; btn.disabled = false; btn.textContent = 'Sign in →'; }
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      msg.textContent = 'No account found with that email — try signing up!';
+      btn.disabled = false;
+      btn.textContent = 'Sign in →';
+    }
   }
 }
