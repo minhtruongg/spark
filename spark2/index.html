@@ -99,17 +99,14 @@
 
 <!-- PROMPT -->
 <div class="prompt-hero">
-  <div class="prompt-label">Today's Prompt</div>
-  <div class="prompt-text" id="promptText">
-    <span class="prompt-loading"><span class="prompt-spinner"></span> Generating today's prompt...</span>
-  </div>
-  <div class="prompt-category" id="promptCat">✨ loading</div>
+  <div class="prompt-label">tonight's spark</div>
+  <div class="prompt-text" id="promptText">Say something you've never said out loud.</div>
 </div>
 
 <!-- SUBMIT -->
 <div class="submit-zone">
-  <div class="submit-box">
-    <textarea id="responseText" placeholder="Share your take, your story, whatever sparks..." rows="4"></textarea>
+  <div class="submit-box" id="submitBox">
+    <textarea id="responseText" placeholder="say it here..." rows="4"></textarea>
     <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
       <span>📎 attach an image (optional)</span>
       <input type="file" id="imageInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" onchange="handleImageSelect(event)">
@@ -117,6 +114,19 @@
     <div class="image-preview-wrap" id="imagePreviewWrap" style="display:none">
       <img id="imagePreview" src="" alt="preview">
       <button class="remove-image-btn" onclick="removeImage()">✕ remove</button>
+    </div>
+    <div class="color-picker-row">
+      <span class="color-label">your color</span>
+      <div class="color-options" id="colorOptions">
+        <button class="color-swatch active" data-color="#f4a035" style="background:#f4a035" onclick="selectColor(this)"></button>
+        <button class="color-swatch" data-color="#e8624a" style="background:#e8624a" onclick="selectColor(this)"></button>
+        <button class="color-swatch" data-color="#5b8dd9" style="background:#5b8dd9" onclick="selectColor(this)"></button>
+        <button class="color-swatch" data-color="#7ec8a4" style="background:#7ec8a4" onclick="selectColor(this)"></button>
+        <button class="color-swatch" data-color="#c47ed4" style="background:#c47ed4" onclick="selectColor(this)"></button>
+        <button class="color-swatch" data-color="#e06b8b" style="background:#e06b8b" onclick="selectColor(this)"></button>
+        <button class="color-swatch" data-color="#7ed4d4" style="background:#7ed4d4" onclick="selectColor(this)"></button>
+        <button class="color-swatch" data-color="#d4d47e" style="background:#d4d47e" onclick="selectColor(this)"></button>
+      </div>
     </div>
     <div class="submit-row">
       <div class="post-as" id="postAs"></div>
@@ -132,7 +142,7 @@
   </div>
 </div>
 
-<div class="section-divider"><span>Community Responses</span></div>
+<div class="section-divider"><span>sparks</span></div>
 <div class="feed" id="feed"><div class="empty-state">Loading sparks...</div></div>
 <div class="toast" id="toast"></div>
 
