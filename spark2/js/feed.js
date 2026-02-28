@@ -121,7 +121,7 @@ async function loadFeed() {
     const clickable = !isAnon && p.user_id ? `onclick="openProfile('${p.user_id}')" style="cursor:pointer"` : '';
 
     return `
-      <div class="card" style="animation-delay:${i * 0.04}s">
+      <div class="card" data-id="${p.id}" style="animation-delay:${i * 0.04}s; --glow-color:${p.color || '#f4a035'}">
         <div class="card-header">
           <div class="avatar" style="background:${color}22; color:${color}" ${clickable}>${initials}</div>
           <div>

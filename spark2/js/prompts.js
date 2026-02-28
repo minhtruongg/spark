@@ -1,4 +1,5 @@
-// ---- FALLBACK PROMPTS (used if AI fails) ----
+// Prompts are now fixed in index.html — no loading needed
+function loadAIPrompt() {}
 const FALLBACK_PROMPTS = [
   { text: "Describe a color you've never seen but can imagine.", category: "🎨 imagination" },
   { text: "Write the last message someone left that you never replied to.", category: "✍️ storytelling" },

@@ -3,12 +3,52 @@ document.getElementById('headerDate').textContent = new Date().toLocaleDateStrin
   weekday: 'long', month: 'long', day: 'numeric'
 });
 
-loadAIPrompt();
 loadFeed();
-handleSharedLink();
+
+// ---- COLOR PICKER ----
+let selectedColor = '#f4a035';
+
+function selectColor(btn) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  selectedColor = btn.dataset.color;
+  // Update submit box glow
+  document.getElementById('submitBox').style.boxShadow = `0 0 40px ${selectedColor}18`;
+  document.getElementById('submitBox').style.borderColor = `${selectedColor}33`;
+}
+
+// ---- ANONYMOUS TOGGLE ----
+function toggleAnon() {
+  const isAnon = document.getElementById('anonToggle').checked;
+  const nameInput = document.getElementById('nameInput');
+  if (nameInput) { nameInput.disabled = isAnon; nameInput.style.opacity = isAnon ? '0.3' : '1'; }
+}
 
 // ---- IMAGE HANDLING ----
 let selectedImageFile = null;
+
+async function compressImage(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxSize = 900;
+        let w = img.width, h = img.height;
+        if (w > maxSize || h > maxSize) {
+          if (w > h) { h = (h / w) * maxSize; w = maxSize; }
+          else { w = (w / h) * maxSize; h = maxSize; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob((blob) => resolve(new File([blob], 'image.jpg', { type: 'image/jpeg' })), 'image/jpeg', 0.7);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 function handleImageSelect(event) {
   const file = event.target.files[0];
@@ -29,30 +69,6 @@ function removeImage() {
   document.getElementById('imageInput').value = '';
   document.getElementById('imagePreviewWrap').style.display = 'none';
   document.getElementById('imageUploadArea').style.display = 'block';
-}
-
-async function compressImage(file) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxSize = 1200;
-        let w = img.width, h = img.height;
-        if (w > maxSize || h > maxSize) {
-          if (w > h) { h = (h / w) * maxSize; w = maxSize; }
-          else { w = (w / h) * maxSize; h = maxSize; }
-        }
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.8);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
 }
 
 async function uploadImage(file) {
@@ -77,7 +93,7 @@ async function submitPost() {
   btn.textContent = 'Checking...';
   modStatus.className = 'mod-status checking';
   modMsg.textContent = 'Checking your post...';
-  await new Promise(r => setTimeout(r, 600));
+  await new Promise(r => setTimeout(r, 500));
 
   if (text) {
     const result = moderate(text);
@@ -101,7 +117,7 @@ async function submitPost() {
       imageUrl = await uploadImage(selectedImageFile);
       modStatus.className = 'mod-status';
     } catch (e) {
-      showToast('Image upload failed - try again', true);
+      showToast('Image upload failed', true);
       btn.disabled = false;
       btn.textContent = 'Post';
       modStatus.className = 'mod-status';
@@ -117,10 +133,10 @@ async function submitPost() {
   const { error } = await sb.from('posts').insert({
     text: text || null,
     user_id: isLoggedIn && !isAnon ? currentUser.id : null,
-    display_name: null,
     is_anonymous: isAnon,
     liked_by: [],
     image_url: imageUrl,
+    color: selectedColor,
   });
 
   btn.disabled = false;
@@ -128,20 +144,13 @@ async function submitPost() {
 
   if (error) { showToast('Error posting - try again', true); return; }
 
-  // Update streak if logged in and not anonymous
-  if (isLoggedIn && !isAnon) {
-    await updateStreak(currentUser.id);
-    renderAuthUI();
-  }
+  if (isLoggedIn && !isAnon) await updateStreak(currentUser.id);
 
   document.getElementById('responseText').value = '';
   removeImage();
   showToast('Posted!');
 
-  // Show claim banner for anonymous posts
-  if (!isLoggedIn) {
-    document.getElementById('claimBanner').style.display = 'flex';
-  }
+  if (!isLoggedIn) document.getElementById('claimBanner').style.display = 'flex';
 
   loadFeed();
 }
@@ -150,36 +159,24 @@ function dismissClaim() {
   document.getElementById('claimBanner').style.display = 'none';
 }
 
-
-// ---- HANDLE SHARED POST LINK ----
-async function handleSharedLink() {
+function handleSharedLink() {
   const params = new URLSearchParams(window.location.search);
   const postId = params.get('post');
   if (!postId) return;
-
-  const { data } = await sb.from('posts')
-    .select('*, profiles(username, streak)')
-    .eq('id', postId)
-    .single();
-
-  if (!data) return;
-
-  // Scroll to top and highlight it
   const banner = document.createElement('div');
   banner.className = 'shared-post-banner';
   banner.innerHTML = '<span>✦ Someone shared this spark with you</span>';
   document.querySelector('.section-divider').before(banner);
-
-  // Load feed and scroll to that card after render
-  await loadFeed();
-  setTimeout(() => {
-    const cards = document.querySelectorAll('.card');
-    // find the matching card and highlight it
-    cards.forEach(card => {
-      if (card.querySelector('.card-content')?.textContent === data.text) {
-        card.style.borderColor = 'var(--accent)';
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    });
-  }, 500);
+  loadFeed().then(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.card').forEach(card => {
+        if (card.dataset.id === postId) {
+          card.style.borderColor = 'rgba(255,255,255,0.2)';
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }, 500);
+  });
 }
+
+handleSharedLink();
