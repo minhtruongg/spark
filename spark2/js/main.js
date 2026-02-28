@@ -31,6 +31,30 @@ function removeImage() {
   document.getElementById('imageUploadArea').style.display = 'block';
 }
 
+async function compressImage(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxSize = 1200;
+        let w = img.width, h = img.height;
+        if (w > maxSize || h > maxSize) {
+          if (w > h) { h = (h / w) * maxSize; w = maxSize; }
+          else { w = (w / h) * maxSize; h = maxSize; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.8);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadImage(file) {
   const ext = file.name.split('.').pop();
   const filename = Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
