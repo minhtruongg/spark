@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spark — Daily Creative Prompts</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Spark ✦</div>
+  <div class="header-right">
+    <div class="date-tag" id="headerDate"></div>
+    <div id="authArea"></div>
+  </div>
+</header>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle">Join Spark.</h2>
+    <p id="modalSubtitle">Create an account to build your profile and streak.</p>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabSignup" onclick="switchTab('signup')">Sign up</button>
+      <button class="modal-tab" id="tabLogin" onclick="switchTab('login')">Sign in</button>
+    </div>
+    <div class="field" id="usernameField">
+      <label>Username</label>
+      <input type="text" id="authUsername" placeholder="how others will see you" maxlength="24" onkeydown="if(event.key==='Enter')handleAuth()">
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter')handleAuth()">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleAuth()">
+    </div>
+    <button class="modal-submit" id="authBtn" onclick="handleAuth()">Create account →</button>
+    <div class="modal-msg" id="authMsg"></div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profileOverlay" onclick="profileOverlayClick(event)">
+  <div class="modal profile-modal">
+    <button class="modal-close" onclick="closeProfile()">✕</button>
+    <div class="profile-header">
+      <div class="profile-avatar" id="profileAvatar"></div>
+      <div>
+        <div class="profile-username" id="profileUsername"></div>
+        <div class="profile-bio" id="profileBio"></div>
+      </div>
+    </div>
+    <div class="profile-stats">
+      <div class="stat">
+        <div class="stat-value" id="profileStreak">0</div>
+        <div class="stat-label">🔥 streak</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="profilePosts">0</div>
+        <div class="stat-label">posts</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="profileLikes">0</div>
+        <div class="stat-label">likes received</div>
+      </div>
+    </div>
+    <div class="section-divider" style="margin: 1.5rem 0"><span>Their posts</span></div>
+    <div class="profile-feed" id="profileFeed"></div>
+  </div>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="shareOverlay" onclick="if(event.target===this)closeShareModal()">
+  <div class="modal share-modal">
+    <button class="modal-close" onclick="closeShareModal()">✕</button>
+    <h2>Share this spark.</h2>
+    <p>Download the card or copy a link to share.</p>
+    <img id="sharePreview" style="width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:1rem" alt="share card preview">
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+      <button class="modal-submit" id="shareDownloadBtn" style="flex:1">⬇ Download image</button>
+      <button class="modal-submit" id="shareLinkBtn" style="flex:1;background:var(--card);color:var(--accent);border:1px solid var(--accent)">🔗 Copy link</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLAIM POST BANNER -->
+<div class="claim-banner" id="claimBanner" style="display:none">
+  <span>✦ Want to own this post and build your profile?</span>
+  <button onclick="openModal()">Create a free account →</button>
+  <button class="dismiss" onclick="dismissClaim()">✕</button>
+</div>
+
+<!-- PROMPT -->
+<div class="prompt-hero">
+  <div class="prompt-label">Today's Prompt</div>
+  <div class="prompt-text" id="promptText">
+    <span class="prompt-loading"><span class="prompt-spinner"></span> Generating today's prompt...</span>
+  </div>
+  <div class="prompt-category" id="promptCat">✨ loading</div>
+</div>
+
+<!-- SUBMIT -->
+<div class="submit-zone">
+  <div class="submit-box">
+    <textarea id="responseText" placeholder="Share your take, your story, whatever sparks..." rows="4"></textarea>
+    <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
+      <span>📎 attach an image (optional)</span>
+      <input type="file" id="imageInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" onchange="handleImageSelect(event)">
+    </div>
+    <div class="image-preview-wrap" id="imagePreviewWrap" style="display:none">
+      <img id="imagePreview" src="" alt="preview">
+      <button class="remove-image-btn" onclick="removeImage()">✕ remove</button>
+    </div>
+    <div class="submit-row">
+      <div class="post-as" id="postAs"></div>
+      <label class="anon-toggle" id="anonToggleWrap" style="display:none">
+        <input type="checkbox" id="anonToggle"> post anonymously
+      </label>
+      <button class="submit-btn" id="postBtn" onclick="submitPost()">Post →</button>
+    </div>
+    <div class="mod-status" id="modStatus">
+      <div class="mod-spinner"></div>
+      <span id="modMsg"></span>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"><span>Community Responses</span></div>
+<div class="feed" id="feed"><div class="empty-state">Loading sparks...</div></div>
+<div class="toast" id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/prompts.js"></script>
+<script src="js/moderation.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/feed.js"></script>
+<script src="js/share.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
