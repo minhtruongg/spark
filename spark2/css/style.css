@@ -178,5 +178,5 @@ header { padding: 1.2rem 2rem; display: flex; align-items: center; justify-conte
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 .prompt-text {
-  white-space: nowrap;
+  font-size: clamp(1.2rem, 3.2vw, 2.4rem);
 }
