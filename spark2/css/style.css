@@ -136,7 +136,7 @@ header { padding: 1.2rem 2rem; display: flex; align-items: center; justify-conte
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at top left, var(--glow-color, transparent), transparent 70%);
-  opacity: 0.06;
+  opacity: var(--glow-opacity, 0.06);
   pointer-events: none;
   transition: opacity 0.3s;
 }

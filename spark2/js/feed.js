@@ -23,6 +23,16 @@ function showToast(msg, err=false) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+function updateCardGlow(postId, likes) {
+  const card = document.querySelector('.card[data-id="' + postId + '"]');
+  if (!card) return;
+  const color = card.style.getPropertyValue('--glow-color');
+  const intensity = getGlowIntensity(likes);
+  const opacity = Math.min(0.05 + likes * 0.015, 0.25);
+  card.style.borderColor = color + intensity;
+  card.style.setProperty('--glow-opacity', opacity);
+}
+
 // ---- LIKES ----
 async function toggleLike(postId, btn) {
   const already = likedPosts.has(postId);
@@ -33,6 +43,7 @@ async function toggleLike(postId, btn) {
     btn.classList.remove('liked');
     countEl.textContent = Math.max(0, n - 1);
     localStorage.setItem('spark_liked', JSON.stringify([...likedPosts]));
+    updateCardGlow(postId, Math.max(0, n - 1));
     const { data } = await sb.from('posts').select('liked_by').eq('id', postId).single();
     const updated = (data?.liked_by || []).filter(id => id !== SESSION_ID);
     await sb.from('posts').update({ likes: Math.max(0, n-1), liked_by: updated }).eq('id', postId);
@@ -41,6 +52,7 @@ async function toggleLike(postId, btn) {
     btn.classList.add('liked');
     countEl.textContent = n + 1;
     localStorage.setItem('spark_liked', JSON.stringify([...likedPosts]));
+    updateCardGlow(postId, n + 1);
     const { data } = await sb.from('posts').select('liked_by').eq('id', postId).single();
     const existing = data?.liked_by || [];
     if (!existing.includes(SESSION_ID)) {
@@ -79,6 +91,23 @@ async function reportPost(postId, btn) {
   }
 }
 
+function getGlowIntensity(likes) {
+  if (likes >= 20) return 'cc';
+  if (likes >= 10) return '99';
+  if (likes >= 5)  return '66';
+  if (likes >= 2)  return '44';
+  return '22';
+}
+
+// ---- GLOW INTENSITY based on likes ----
+function getGlowIntensity(likes) {
+  if (likes >= 20) return 'cc';
+  if (likes >= 10) return '99';
+  if (likes >= 5)  return '66';
+  if (likes >= 2)  return '44';
+  return '22';
+}
+
 // ---- LOAD FEED ----
 async function loadFeed() {
   const feed = document.getElementById('feed');
@@ -113,7 +142,10 @@ async function loadFeed() {
     const streak = !isAnon && p.profiles?.streak > 1 ? '<span class="streak-pill">🔥 ' + p.profiles.streak + '</span>' : '';
     const clickable = !isAnon && p.user_id ? 'onclick="openProfile(\'' + p.user_id + '\')" style="cursor:pointer"' : '';
 
-    return '<div class="card" data-id="' + p.id + '" style="animation-delay:' + (i*0.05) + 's;--glow-color:' + color + ';border-color:' + color + '22">' +
+    const glowIntensity = getGlowIntensity(p.likes || 0);
+    const glowOpacity = Math.min(0.04 + (p.likes || 0) * 0.015, 0.28);
+
+    return '<div class="card" data-id="' + p.id + '" style="animation-delay:' + (i*0.05) + 's;--glow-color:' + color + ';--glow-opacity:' + glowOpacity + ';border-color:' + color + glowIntensity + '">' +
       (p.image_url ? '<img class="card-image" src="' + esc(p.image_url) + '" alt="" loading="lazy" onclick="' + (p.user_id ? 'openProfile(\'' + p.user_id + '\')' : '') + '">' : '') +
       '<div class="card-content">' + esc(p.text||'') + '</div>' +
       '<div class="card-footer">' +
