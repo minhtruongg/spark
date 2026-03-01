@@ -7,6 +7,34 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Pulse Analytics -->
+<script>
+(function() {
+  var PID = "prj_M9_fHzSfvEK8xWwB";
+  var API = "http://localhost:3001/e";
+  function track(name, props) {
+    fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pid: PID, event: name, props: props, url: location.href })
+    }).catch(function(){});
+  }
+  // Auto: page view
+  track('Page View', { url: location.href, ref: document.referrer });
+  // Auto: clicks
+  document.addEventListener('click', function(e) {
+    track('Click', { el: e.target.tagName, text: (e.target.innerText||'').slice(0,40), id: e.target.id || '' });
+  });
+  // Auto: input focus
+  document.addEventListener('focusin', function(e) {
+    var t = e.target;
+    if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')
+      track('Input Focus', { field: t.name || t.id || t.type });
+  });
+  // Manual: window.pulse.track('My Event', { key: 'value' })
+  window.pulse = { track: track };
+})();
+</script>
 </head>
 <body>
 
