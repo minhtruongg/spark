@@ -10,8 +10,9 @@
 <!-- Pulse Analytics -->
 <script>
 (function() {
-  var PID = "prj_v7UNV9455GZ2tvjx";
+  var PID = "prj_sLP2PvKbr9QOE2wj";
   var API = "http://localhost:3001/e";
+  if (location.hostname === new URL(API).hostname) return;
   function track(name, props) {
     fetch(API, {
       method: 'POST',
@@ -21,9 +22,10 @@
   }
   // Auto: page view
   track('Page View', { url: location.href, ref: document.referrer });
-  // Auto: clicks
+  // Auto: clicks (buttons, links and submit inputs only)
   document.addEventListener('click', function(e) {
-    track('Click', { el: e.target.tagName, text: (e.target.innerText||'').slice(0,40), id: e.target.id || '' });
+    var t = e.target.closest('button, a, input[type="submit"]');
+    if (t) track('Click', { el: t.tagName, text: (t.innerText||'').slice(0,40), id: t.id || '' });
   });
   // Auto: input focus
   document.addEventListener('focusin', function(e) {
